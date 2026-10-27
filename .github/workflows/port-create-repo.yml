@@ -1,0 +1,35 @@
+name: Create repository from Port
+on:
+  workflow_dispatch:
+    inputs:
+      repo_name:
+        required: true
+        type: string
+      description:
+        required: false
+        type: string
+      port_context:
+        required: false
+        type: string
+jobs:
+  create-repo:
+    runs-on: ubuntu-latest
+    env:
+      OWNER: supreet-kulkarni
+      GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+    steps:
+      - name: Create repository
+        run: |
+          gh repo create "$OWNER/${{ inputs.repo_name }}" --private --add-readme --description "${{ inputs.description }}"
+      - name: Register repository in Port
+        uses: port-labs/port-github-action@v1
+        with:
+          clientId: ${{ secrets.PORT_CLIENT_ID }}
+          clientSecret: ${{ secrets.PORT_CLIENT_SECRET }}
+          baseUrl: https://api.port.io
+          operation: UPSERT
+          identifier: ${{ inputs.repo_name }}
+          title: ${{ inputs.repo_name }}
+          blueprint: githubRepository
+          properties: |
+            { "url": "https://github.com/supreet-kulkarni/${{ inputs.repo_name }}", "description": "${{ inputs.description }}", "visibility": "private", "defaultBranch": "main" }
